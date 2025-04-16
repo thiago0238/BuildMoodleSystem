@@ -1,0 +1,30 @@
+#!/bin/bash
+
+set -e  # Para o script se qualquer comando falhar
+
+TMP_DIR1="moodle_compose"
+TMP_DIR2="LeadSystem"
+
+echo "🛠️ Clonando moodle_compose..."
+git clone git@github.com:thiago0238/moodle_compose.git $TMP_DIR1
+
+echo "🐳 Buildando imagem Docker: moodle_compose"
+docker build -t thiago0238/moodle_compose:latest ./$TMP_DIR1
+
+echo "🛠️ Clonando LeadSystem..."
+git clone git@github.com:thiago0238/LeadSystem.git $TMP_DIR2
+
+echo "🐳 Buildando imagem Docker: LeadSystem"
+docker build -t thiago0238/leadsystem:latest ./$TMP_DIR2
+
+echo "🧹 Limpando diretórios temporários..."
+rm -rf $TMP_DIR1 $TMP_DIR2
+
+# Caminho para o docker-compose.yml
+COMPOSE_DIR="./moodle_compose" # Altere se estiver em outro lugar
+
+echo "🚀 Subindo containers com docker-compose..."
+cd $COMPOSE_DIR
+docker compose up -d
+
+echo "✅ Tudo finalizado com sucesso!"
