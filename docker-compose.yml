@@ -1,36 +1,68 @@
-volumes:
-  data:
-services:
-  amb01:
-    container_name: moodleserver
-    build: .
-    ports:
-    - "9090:80"
-    - "9443:443"
-    volumes:
-    - ./moodledata/_data/:/var/www/moodledata
-    links:
-    - database
+# docker-compose.yml
 
+version: '3.8'
+
+volumes:
+  moodledata: # Volume para os dados persistentes do Moodle
+  mysqldata:  # Volume para os dados persistentes do MariaDB
+
+services:
+  # Serviço do Moodle
+  moodle:
+    image: bitnami/moodle:4.5.4
+    container_name: moodleserver
+    ports:
+      - "9090:8080" # A imagem da Bitnami expõe na porta 8080 por padrão
+      - "9443:8443" # A imagem da Bitnami expõe na porta 8443 para HTTPS
+    volumes:
+      - moodledata:/bitnami/moodle # Mapeia o volume nomeado para o diretório de dados do Moodle da Bitnami
+    environment:
+      # --- Configurações de Conexão com o Banco de Dados ---
+      # As variáveis devem corresponder às do serviço 'database'
+      - MARIADB_HOST=database
+      - MARIADB_PORT_NUMBER=3306
+      - MOODLE_DATABASE_NAME=moodle
+      - MOODLE_DATABASE_USER=moodle_user
+      - MOODLE_DATABASE_PASSWORD=mymoodlepass
+      - MOODLE_LANGUAGE=pt_br # Define o idioma padrão do Moodle para Português do Brasil
+      # --- Configurações Iniciais do Moodle ---
+      - MOODLE_USERNAME=admin
+      - MOODLE_PASSWORD=adminpassword # Troque por uma senha forte
+      - MOODLE_EMAIL=admin@example.com # Troque pelo seu email
+      - MOODLE_SITE_NAME=Minha Escola Moodle
+      - ALLOW_EMPTY_PASSWORD=no # Força o uso de senhas
+      
+      - MOODLE_MAX_UPLOAD_SIZE=1200M
+      - PHP_UPLOAD_MAX_FILESIZE=1200M
+      - PHP_POST_MAX_SIZE=1200M
+
+    depends_on:
+      - database
+
+  # Serviço do Banco de Dados
   database:
-    image: mariadb:latest
+    image: mariadb:10.6 # É uma boa prática fixar a versão principal
     container_name: moodledb
     volumes:
-    - ./mysql/_data/:/var/lib/mysql
+      - mysqldata:/var/lib/mysql # Mapeia o volume nomeado para o diretório de dados do MariaDB
     environment:
-    - MYSQL_ROOT_PASSWORD=myrootpass
-    - MYSQL_DATABASE=moodle
-    - MYSQL_USER=moodle_user
-    - MYSQL_PASSWORD=mymoodlepass
+      - MARIADB_ROOT_PASSWORD=myrootpass
+      - MARIADB_DATABASE=moodle
+      - MARIADB_USER=moodle_user
+      - MARIADB_PASSWORD=mymoodlepass
     command: --character-set-server=utf8mb4 --collation-server=utf8mb4_unicode_ci
     ports:
       - "3306:3306"
-    
+
+  # Serviço do phpMyAdmin (opcional)
   phpmyadmin:
-      image: phpmyadmin/phpmyadmin:latest
-      links:
-        - database
-      ports:
-        - 8088:80
-      environment:
-        - PMA_ARBITRARY=1
+    image: phpmyadmin/phpmyadmin:latest
+    container_name: phpmyadmin
+    links:
+      - database
+    ports:
+      - "8088:80"
+    environment:
+      - PMA_ARBITRARY=1
+    depends_on:
+      - database

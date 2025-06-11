@@ -1,5 +1,5 @@
 #cria a imagem de PHP com apache
-FROM php:7.4-apache
+FROM php:8.1-apache
 
 #executa atualização do container e instalação de alguns softwares
 RUN apt-get update \
@@ -16,7 +16,7 @@ RUN set -eux; apt-get install -y libzip-dev
 RUN apt-get update \
   && apt-get install -f -y --no-install-recommends \
   rsync \
-  netcat \
+  netcat-openbsd \
   libicu-dev \
   libz-dev \
   libpq-dev \
@@ -71,7 +71,7 @@ RUN set -ex \
         echo 'always_populate_raw_post_data = -1'; \
         echo 'cgi.fix_pathinfo = 1'; \
         echo 'session.auto_start = 0'; \
-        echo 'upload_max_filesize = 500M'; \
+        echo 'upload_max_filesize = 1500M'; \
         echo 'post_max_size = 150M'; \
         echo 'max_execution_time = 1800'; \
         echo 'max_input_vars = 5000'; \
@@ -90,11 +90,11 @@ WORKDIR /var/www/html
 
 
 #faz dowload do moodle 3.11, descompacta e configura as permissões
-RUN cd /var/www/html \
-&& wget https://download.moodle.org/download.php/direct/stable311/moodle-latest-311.tgz \
-&& tar -zxvf moodle-latest-311.tgz \
-&& rm -R moodle-latest-311.tgz \
-&& chmod 0755 /var/www/html -R
+RUN wget https://github.com/moodle/moodle/archive/refs/tags/v4.5.5.tar.gz -O moodle-4.5.5.tgz && \
+    tar -zxvf moodle-4.5.5.tgz && \
+    mv moodle-4.5.5 moodle && \
+    rm moodle-4.5.5.tgz && \
+    chmod -R 0755 /var/www/html/moodle
 
 #Realiza alteração do proprietário do diretório
 RUN chown www-data:www-data /var/www/html -R
