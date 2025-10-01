@@ -1,7 +1,5 @@
 # docker-compose.yml
 
-version: '3.8'
-
 volumes:
   moodledata: # Volume para os dados persistentes do Moodle
   mysqldata:  # Volume para os dados persistentes do MariaDB
@@ -35,9 +33,13 @@ services:
       - MOODLE_MAX_UPLOAD_SIZE=1200M
       - PHP_UPLOAD_MAX_FILESIZE=1200M
       - PHP_POST_MAX_SIZE=1200M
+      - LANG=pt_BR.UTF-8
+      - LANGUAGE=pt_BR:pt
+      - LC_ALL=pt_BR.UTF-8
 
     depends_on:
       - database
+    
 
   # Serviço do Banco de Dados
   database:
